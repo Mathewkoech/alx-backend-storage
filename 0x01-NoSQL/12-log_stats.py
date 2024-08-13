@@ -8,7 +8,7 @@ A script that provides some stats about
 Nginx logs stored in MongoDB.
 """
 
-# Setup basic logging for logs
+# Setup basic logging
 logging.basicConfig(level=logging.INFO)
 
 
@@ -20,12 +20,13 @@ def log_stats():
     and path /status.
     """
     try:
+        # MongoDB connection string from environment variable or default
         mongo_url = os.getenv('MONGO_URL', 'mongodb://localhost:27017/')
         client = MongoClient(mongo_url)
         db = client['logs']
         nginx_collection = db['nginx']
 
-        # Number of logs
+        # Total number of logs
         total_logs = nginx_collection.count_documents({})
         logging.info(f"{total_logs} logs")
 
