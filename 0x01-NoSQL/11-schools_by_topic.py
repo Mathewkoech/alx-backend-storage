@@ -3,6 +3,7 @@
 function that returns the list of school having a specific topic
 """
 
+
 def schools_by_topic(mongo_collection, topic):
     """
     Returns lists of school having specific topics
