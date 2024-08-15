@@ -1,12 +1,31 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+"""
+Defins a Cache class for interfacing with Redis, providing methods
+to store data with unique keys and retrieve it, suitable for
+caching and temporary data storage.
+"""
 
-import uuid
 import redis
+import uuid
 import functools
 from typing import Union, Optional, Callable
 
 
-def count_calls():
+def count_calls(method: Callable) -> Callable:
+    """
+    A decorator to store the history of inputs for a particular func.
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs) -> Any:
+        """
+        Normalize and store input arguments
+        """
+        key = f"count:{method.__qualname__}"
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+    return wrapper
+
+
 class Cache:
     """
     Handles data storage and retrieval in Redis using unique keys.
@@ -92,6 +111,20 @@ class Cache:
 
         return value
 
+    def replay(method: Callable):
+        """
+        Display the history of calls of a particular function.
+        """
+        instance = method.__self__   # Get the instance (Cache) for the method
+        method_name = method.__qualname__
+        inputs_key = f"{method_name}:inputs"
+        outputs_key = f"{method_name}:outputs"
 
-    
+        inputs = instance._redis.lrange(inputs_key, 0, -1)
+        outputs = instance._redis.lrange(outputs_key, 0, -1)
 
+        print(f"{method_name} was called {len(inputs)} times:")
+        for input_str, output_str in zip(inputs, outputs):
+            input_decode = input_str.decode('utf-8')
+            output_decode = output_str.decode('utf-8')
+            print(f"{method_name} {input_decode} -> {output_decoded}")
